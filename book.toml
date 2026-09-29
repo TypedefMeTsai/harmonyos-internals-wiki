@@ -1,7 +1,7 @@
 [book]
 title = "鸿蒙技术内幕：系统架构、性能优化与工具实战"
 description = "一本面向有经验的鸿蒙（HarmonyOS）开发者与系统工程师的技术百科（English: HarmonyOS Internals: System Architecture, Performance & Tooling in Practice）"
-authors = []
+authors = ["TypedefMeTsai"]
 language = "zh-CN"
 src = "src"
 

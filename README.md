@@ -69,4 +69,12 @@
 
 ## License
 
-正文可公开阅读。引用 OpenHarmony 源码遵循 Apache License 2.0；引用华为开发者官方文档仅用于技术说明目的。
+正文和电子书可以公开阅读。社区使用按 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans)：非商业转载和改编须署名作者 TypedefMeTsai，并保留相同许可。完整条款见 [LICENSE](LICENSE)，书内摘要见 [许可说明](src/preface/license.md)。
+
+出版、上架销售、收费培训、把正文打进付费产品，需要版权人 TypedefMeTsai 的书面授权。说明见 [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)。
+
+正文引用的 OpenHarmony 源码遵循 Apache License 2.0；华为开发者官方文档的引用仅用于技术说明并已标注出处，遵循华为自身使用条款。本书是独立作品，与华为技术有限公司无隶属、背书或赞助关系。
+
+## 贡献
+
+欢迎开 Issue 或 Pull Request。错别字、失效链接、事实勘误可以直接 PR；新章节或大段重写请先开 Issue。规范见 [CONTRIBUTING.md](CONTRIBUTING.md)，写作标准见 [writing-guide.md](writing-guide.md)。

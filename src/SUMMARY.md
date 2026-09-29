@@ -1,6 +1,7 @@
 # 目录
 
 - [写在前面](preface/intro.md)
+- [许可说明](preface/license.md)
 - [本书的使用方式](preface/how-to-use.md)
 - [适用读者](preface/target-audience.md)
 - [版本约定](preface/version-conventions.md)

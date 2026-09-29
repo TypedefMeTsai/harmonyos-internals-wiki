@@ -1,0 +1,62 @@
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+(CC BY-NC-SA 4.0)
+
+Copyright (c) 2026 TypedefMeTsai
+
+人话摘要（以中文说明为准，法律文本以 CC 协议全文为准）：
+
+- 正文和电子书可以公开阅读、非商业转载和改编。
+- 须署名作者 TypedefMeTsai，保留仓库地址，改编后仍用 CC BY-NC-SA 4.0。
+- 出版纸质书或电子书、上架销售、收费培训、把正文打进付费产品，属于商用。
+- 商用必须取得版权人书面授权。仓库公开不等于放弃出版和销售收益，也不等于
+  已经授权别人出书。
+- 商用范围和收益分配只写在版权人签发的书面协议里，见 COMMERCIAL-LICENSE.md。
+- 提交 Pull Request 的授权范围见 CONTRIBUTING.md。
+- 本书内容基于华为开发者官方文档与 OpenHarmony 开源项目整理，引用条款见文末。
+
+You are free to:
+
+  - Share: copy and redistribute the material in any medium or format
+  - Adapt: remix, transform, and build upon the material
+
+Under the following terms:
+
+  - Attribution: You must give appropriate credit
+  - NonCommercial: You may not use the material for commercial purposes
+  - ShareAlike: You must distribute contributions under the same license
+
+Full license text: https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+Chinese deed: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans
+
+Alternative commercial licensing
+--------------------------------
+
+The copyright holder also offers a separate commercial license. That
+alternative applies only after the copyright holder has issued a written
+commercial agreement to the licensee. This notice does not itself grant
+commercial-use rights. See COMMERCIAL-LICENSE.md.
+
+Third-party sources
+-------------------
+
+This book is a secondary work: it explains, organizes and comments on
+material published by Huawei and the OpenHarmony project. The copyright in
+the original material belongs to its respective owners.
+
+  - OpenHarmony source excerpts (repositories such as arkui_ace_engine,
+    graphic_graphic_2d, arkcompiler_ets_runtime) remain under
+    Apache License 2.0. See https://www.apache.org/licenses/LICENSE-2.0
+    and https://gitee.com/openharmony
+  - Huawei developer documentation (developer.huawei.com), including API
+    references, development guides and best-practice articles, remains
+    subject to Huawei's own terms of use. Quotations in this book are made
+    for technical explanation and attribution, with source noted in each
+    chapter's reference section.
+  - HarmonyOS, ArkTS, ArkUI, DevEco Studio and related marks are trademarks
+    of Huawei Technologies Co., Ltd. This book is an independent work and is
+    not affiliated with, endorsed by, or sponsored by Huawei.
+
+The CC BY-NC-SA 4.0 license above covers the original expression in this
+book: its structure, explanations, diagrams, analyses and code examples
+written by the author. It does not extend to the third-party material quoted
+within it.
