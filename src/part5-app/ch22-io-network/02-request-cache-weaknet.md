@@ -1,0 +1,73 @@
+# 22.2 请求、缓存与弱网策略
+
+## RCP 会话：连接复用是第一优化
+
+RCP（Remote Communication Kit）是当前推荐的网络请求 API（@kit.RemoteCommunicationKit）。使用上的核心概念是 **Session**：会话持有连接池、缓存、拦截器等配置。性能上的第一条规则：**复用 Session，不要每个请求 createSession**。每次新建会话意味着重新建连——DNS、TCP、TLS 握手全套重来，而这正是请求耗时里最容易被忽视的几百毫秒。
+
+连接复用的量化控制通过 connectionConfiguration 完成，官方示例里给出过 `maxConnectionsPerHost: 16`、`maxTotalConnections: 1024` 这样的批量并发配置。实际取值按业务定：图片/资源类批量请求可以把 per-host 并发开高，接口类请求保持默认即可——并发开太高会触发服务端限流，且移动端弱网下并发连接争抢带宽，单个关键请求反而变慢。
+
+配合 19 章的结论：冷启动必需的请求在 AbilityStage/UIAbility 的 onCreate 里发起，并且在此之前（应用启动或空闲时）对关键域名做**预连接/预解析**，提前完成 DNS 查询与 TCP/TLS 握手，让第一个真实请求直接复用热连接。
+
+## HTTP 缓存：响应缓存与缓存拦截器
+
+RCP 的响应缓存（ResponseCache）遵循 RFC 9111 协议，支持独立配置缓存策略与持久化路径，内存、磁盘双层管理。用法是创建 ResponseCache 实例时指定沙箱缓存目录，配置到 Session 的 requestConfiguration 里：
+
+```typescript
+import { rcp } from '@kit.RemoteCommunicationKit';
+
+const responseCache = new rcp.ResponseCache({ pathToFolder: context.cacheDir + '/http_cache' });
+const session = rcp.createSession({ requestConfiguration: { cache: responseCache } });
+```
+
+ResponseCache 实例可以配置到多个 Session 中共享缓存数据。缓存生效后可以通过缓存状态信息确认命中情况（官方文档示例：首次请求后缓存条数应为 1）。
+
+对缓存逻辑有定制需求时（比如忽略服务端 Cache-Control、对特定接口强制缓存），用**缓存拦截器**：创建 Session 时在 interceptors 里挂自定义 Interceptor，介入缓存的预处理与加载逻辑。
+
+缓存策略的实操建议：
+
+- 静态资源（图片、配置、版本化内容）：依赖服务端 Cache-Control，客户端开 ResponseCache 即可。
+- 列表类接口：短 TTL 缓存 + 后台刷新，冷启动先展示缓存（呼应 19.2 的"本地存储预填"）。
+- 写操作与强实时数据：显式绕过缓存，不要让拦截器的默认行为污染。
+
+**怎么验证**：Profiler Network 泳道看重复请求是否消失、响应来源是否命中缓存；对比开启缓存前后冷启动数据到位时间。
+
+缓存还有两个工程细节：缓存目录放在应用沙箱 cacheDir 下，系统空间紧张时可被清理，应用逻辑要容忍缓存整体消失；缓存键由请求 URL 与相关头部决定，带时间戳/随机参数的 URL 会让缓存永远 miss——这类请求要么去掉随机参数，要么在拦截器里归一化缓存键。
+
+## 弱网策略：感知、降级与预取
+
+弱网不是"请求慢"，是一组需要分别应对的状态：高延迟、丢包、带宽窄、网络切换。对应的机制：
+
+**网络状态感知**：监听网络状态变化，做对应降级——官方《网络状态感知》场景文档以视频播放为例：Wi-Fi 切到蜂窝时暂停播放并提醒用户；蜂窝切回 Wi-Fi 时自动恢复；监听到弱网状态时提示用户，系统也可能按网络质量切换网络。这个思路通用：弱网下降低图片分辨率档位、关闭预加载、合并请求。
+
+**请求预取**：网络质量好时对后续可能产生的请求预取并缓存，后续请求直接命中缓存（《Network Navigator》文档）。典型场景：信息流应用在当前页浏览时预取下一页；详情页大概率被点击的条目预取。预取必须受网络状态门控——弱网预取是负优化，抢占用户当前请求的带宽。
+
+**失败与重试**：弱网下的重试要退避（指数退避 + 上限），避免失败风暴打满连接池；对失败的请求区分错误类型，RCP 的错误字段里有分阶段的失败信息（DNS/TCP/TLS/发送/接收/Body 各阶段的 httpPhase 位图），按位判断失败发生在哪个阶段——DNS 阶段失败可能是域名解析问题，TLS 之后失败更可能是服务端或内容问题，排查方向完全不同。
+
+## 综合案例：冷启动首屏接口的网络预算
+
+把本节和第 19 章串起来看一个完整设计。信息流应用首屏接口的网络预算可以这样做：应用空闲或上次退出前对 API 域名做预解析预连接；冷启动时 AbilityStage.onCreate 里复用全局 Session 发起首屏请求；首屏数据有 ResponseCache 加业务双层缓存，上次数据先渲染骨架与旧内容；网络返回后反序列化放 TaskPool，结果回主线程二刷；弱网监听到降档时，首屏图片切低清档位、关闭下一页预取。这套组合里没有任何一项是新技术，但每一项都对应一个可验证指标：预连接看 Network 泳道连接段时间、缓存看重复请求数、二刷看 Launch 完成时延、弱网降档看弱网下的完成时延分布。
+
+## 常见误区
+
+**"开了缓存就快了"**：缓存只对可缓存的响应生效。接口如果返回 `Cache-Control: no-store`，或者 URL 每次带随机参数，ResponseCache 形同虚设。开缓存后第一件事是验证命中率，不是默认它生效。
+
+**"并发越高越快"**：批量请求时把并发拉满，弱网下会造成关键请求排队。并发数要和网络状态联动，强网批量、弱网串行化关键请求。
+
+**"重试幂等不用管"**：非幂等请求（下单、支付类）的重试必须由业务层决定，网络层的自动重试只适用于幂等读请求。
+
+## 观测手段汇总
+
+- **Profiler Network 泳道**：请求瀑布图，看每个请求的 DNS/连接/TLS/首字节/下载各段耗时，找"连接段占比高"（该上复用与预连接）和"下载段占比高"（该压缩、分页、CDN）的请求。
+- **HiTraceMeter 自打点**：对关键链路（冷启动首屏接口）打点，和启动流程对齐看时机是否合理。
+- **AppAnalyzer 冷启动体检**：直接给出"请求耗时"与"点击离手到请求发起间隔"两个指标，判断是请求慢还是发起晚。
+- **缓存验证**：对比开/关 ResponseCache 的重复请求数量与数据到位时延。
+
+## 参考资料
+
+- 官方文档：《RCP 响应缓存》（remote-communication-cache-basic、remote-communication-cache-intercept、remote-communication-cache-shared）
+- 官方文档：《RCP 连接配置》（remote-communication-cpo）
+- 官方文档：《网络状态感知与连接管理》（network-information-query-connection-management）
+- 官方文档：《Network Navigator》（network-navigator）
+- 官方文档：《远程通信错误字段》（remote-communication-error-field，httpPhase）
+- 官方文档：《应用冷启动时延优化》（网络请求提前发送章节）
+- 官方文档：《Network 分析》（ide-profiler-network）
